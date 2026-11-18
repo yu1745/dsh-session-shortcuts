@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "会话切换快捷键",
+    "description": "在 DSH Web 中用 Ctrl+Alt+左右方向键循环切换工作区侧栏中的可见会话。若浏览器会把 Ctrl+Tab 或 Ctrl+Shift+Tab 交给页面，也可用这两组快捷键。"
+  }
+}

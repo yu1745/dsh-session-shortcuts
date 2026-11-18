@@ -1,0 +1,3 @@
+- insert:
+    - id: yu-session-shortcuts
+      name: '@yu1745/dsh-session-shortcuts'

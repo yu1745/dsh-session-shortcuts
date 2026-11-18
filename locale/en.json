@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Session shortcuts",
+    "description": "Cycle visible Workspace sessions in DSH Web with Ctrl+Alt+Left/Right, or Ctrl+Tab/Ctrl+Shift+Tab on browsers that deliver those keys to the page."
+  }
+}
