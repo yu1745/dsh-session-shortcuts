@@ -8,8 +8,8 @@ window.__ModuleLoader__.load({
       inject: ['shortcuts', 'locale', 'uiWorkspace', 'workspaces'],
       apply(ctx) {
         ctx.effect(() => ctx.locale.register(namespace, {
-          en: { next: 'Next visible session', previous: 'Previous visible session' },
-          zh: { next: '下一个可见会话', previous: '上一个可见会话' },
+          en: { next: 'Next visible session', previous: 'Previous visible session', start: 'New session' },
+          zh: { next: '下一个可见会话', previous: '上一个可见会话', start: '新建会话' },
         }));
         const t = ctx.locale.bind(namespace);
         for (const [key, arrow, shift] of [
@@ -27,10 +27,25 @@ window.__ModuleLoader__.load({
             group: 'application',
           }));
         }
+        ctx.effect(() => ctx.shortcuts.registerFixed({
+          id: 'yu-session-switch.start',
+          label: () => t('start'),
+          keys: ['Ctrl+T', 'Ctrl+Alt+Shift+T'],
+          bindings: [
+            { code: 'KeyT', modifiers: ['control'] },
+            { code: 'KeyT', modifiers: ['control', 'alt', 'shift'] },
+          ],
+          group: 'application',
+        }));
         ctx.effect(() => ctx.shortcuts.observeFixedInput(input => {
           if (input.type !== 'keydown' || input.context.modal !== null || input.context.region === 'terminal') return;
           const { code, control, alt, shift, meta, composing, repeat, defaultPrevented } = input.gesture;
           if (!control || meta || composing || repeat || defaultPrevented) return;
+          if (code === 'KeyT' && ((!alt && !shift) || (alt && shift))) {
+            ctx.uiWorkspace.startSession();
+            input.consume();
+            return;
+          }
           const direction = code === 'Tab' && !alt ? (shift ? -1 : 1)
             : alt && !shift && code === 'ArrowLeft' ? -1
               : alt && !shift && code === 'ArrowRight' ? 1 : 0;

@@ -10,6 +10,7 @@ function mount({ selected = 'b', ids = ['a', 'a', 'b', 'archived', 'hidden', 'c'
   let listener;
   let active = selected;
   const opened = [];
+  const started = [];
   const disposed = [];
   const effects = [];
   const commands = [];
@@ -28,7 +29,10 @@ function mount({ selected = 'b', ids = ['a', 'a', 'b', 'archived', 'hidden', 'c'
       observeFixedInput: callback => { listener = callback; return () => { listener = undefined; disposed.push('observer'); }; },
     },
     workspaces: { list: { getSnapshot: () => ({ archivedSessionIds: ['archived'] }) } },
-    uiWorkspace: { openSession: id => { opened.push(id); active = id; } },
+    uiWorkspace: {
+      openSession: id => { opened.push(id); active = id; },
+      startSession: (...args) => started.push(args),
+    },
   });
   function press(code, gesture = {}, context = {}) {
     let consumed = false;
@@ -40,7 +44,7 @@ function mount({ selected = 'b', ids = ['a', 'a', 'b', 'archived', 'hidden', 'c'
     });
     return consumed;
   }
-  return { press, opened, disposed, commands, dispose: () => effects.reverse().forEach(cleanup => cleanup()) };
+  return { press, opened, started, disposed, commands, dispose: () => effects.reverse().forEach(cleanup => cleanup()) };
 }
 
 test('cycles both directions and wraps in displayed order', () => {
@@ -75,10 +79,28 @@ test('leaves the shortcut unconsumed when fewer than two candidates are visible'
   assert.deepEqual(app.opened, []);
 });
 
-test('registers both actions and releases registrations when disposed', () => {
+test('registers all actions and releases registrations when disposed', () => {
   const app = mount();
-  assert.deepEqual(app.commands.map(command => command.id), ['yu-session-switch.next', 'yu-session-switch.previous']);
+  assert.deepEqual(app.commands.map(command => command.id), ['yu-session-switch.next', 'yu-session-switch.previous', 'yu-session-switch.start']);
   app.dispose();
-  assert.deepEqual(app.disposed, ['observer', 'yu-session-switch.previous', 'yu-session-switch.next', 'locale']);
+  assert.deepEqual(app.disposed, ['observer', 'yu-session-switch.start', 'yu-session-switch.previous', 'yu-session-switch.next', 'locale']);
   assert.equal(app.press('Tab'), false);
+});
+
+test('starts a session without relying on visible sidebar rows', () => {
+  const app = mount({ ids: [] });
+  assert.equal(app.press('KeyT'), true);
+  assert.equal(app.press('KeyT', { alt: true, shift: true }), true);
+  assert.deepEqual(app.started, [[], []]);
+  assert.deepEqual(app.opened, []);
+});
+
+test('preserves other Ctrl+T variants and blocked contexts', () => {
+  const app = mount();
+  for (const gesture of [{ alt: true }, { shift: true }, { meta: true }, { control: false }, { composing: true }, { repeat: true }, { defaultPrevented: true }]) {
+    assert.equal(app.press('KeyT', gesture), false);
+  }
+  assert.equal(app.press('KeyT', {}, { modal: 'settings' }), false);
+  assert.equal(app.press('KeyT', {}, { region: 'terminal' }), false);
+  assert.deepEqual(app.started, []);
 });
