@@ -1,6 +1,6 @@
 {
   "name": "@yu1745/dsh-session-shortcuts",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Cycle through visible DSH Web sessions with keyboard shortcuts.",
   "type": "module",
   "engines": { "node": ">=22", "dsh": "^0.2.2-rc.3" },
